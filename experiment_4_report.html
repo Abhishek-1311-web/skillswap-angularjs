@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Ex.no:4 - Code Debugging Lab Report</title>
+<style>
+  @page {
+    size: A4;
+    margin: 20mm;
+  }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    color: #111;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 20px;
+  }
+  .page {
+    background: #fff;
+    width: 210mm;
+    min-height: 297mm;
+    padding: 25mm 20mm;
+    margin: 10px auto;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    box-sizing: border-box;
+    position: relative;
+    page-break-after: always;
+  }
+  .header-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 25px;
+  }
+  .header-table td {
+    vertical-align: top;
+  }
+  .header-right {
+    text-align: right;
+  }
+  .title {
+    text-align: center;
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 25px;
+    letter-spacing: 0.5px;
+  }
+  .section-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-top: 18px;
+    margin-bottom: 8px;
+  }
+  .text-content {
+    font-size: 14.5px;
+    line-height: 1.6;
+    margin-bottom: 12px;
+  }
+  .code-box {
+    background-color: #f8f9fa;
+    border: 1px solid #e1e4e8;
+    border-radius: 4px;
+    padding: 10px 14px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 13.5px;
+    color: #24292e;
+    margin: 10px 0 16px 0;
+    overflow-x: auto;
+  }
+  .img-container {
+    text-align: center;
+    margin: 15px 0 20px 0;
+  }
+  .img-container img {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid #ccc;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    border-radius: 4px;
+  }
+  .result-text {
+    font-size: 15px;
+    line-height: 1.6;
+    margin-top: 25px;
+    font-weight: 500;
+  }
+  @media print {
+    body {
+      background: none;
+      padding: 0;
+    }
+    .page {
+      box-shadow: none;
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      page-break-after: always;
+    }
+  }
+</style>
+</head>
+<body>
+
+  <!-- PAGE 1 -->
+  <div class="page">
+    <table class="header-table">
+      <tr>
+        <td>
+          Ex.no:4<br>
+          Date: 08.09.2026
+        </td>
+        <td class="header-right">
+          243917720521041
+        </td>
+      </tr>
+    </table>
+
+    <div class="title">Code Debugging</div>
+
+    <div class="section-title">Aim:</div>
+    <div class="text-content" style="margin-left: 30px;">
+      To learn how to debug AngularJS application using Chrome DevTools.
+    </div>
+
+    <div class="section-title">explore.html:</div>
+    <div class="text-content" style="margin-left: 30px;">
+      The name of ng-controller is ExploreController
+    </div>
+
+    <div class="code-box">
+      &lt;div id="app-shell" ng-controller="Explore"&gt;&lt;/div&gt;
+    </div>
+
+    <div class="img-container">
+      <img src="devtools_console_error.jpg" alt="Chrome DevTools Console Error">
+    </div>
+
+    <div class="section-title">Register.html:</div>
+    <div class="text-content" style="margin-left: 30px;">
+      Due to the missing of this line the register page didn't redirect to the actual home page instead it just move to the login page.
+    </div>
+
+    <div class="code-box">
+      AuthService.register($scope.user);
+    </div>
+  </div>
+
+  <!-- PAGE 2 -->
+  <div class="page">
+    <table class="header-table">
+      <tr>
+        <td>
+          Ex.no:4<br>
+          Date: 08.09.2026
+        </td>
+        <td class="header-right">
+          243917720521041
+        </td>
+      </tr>
+    </table>
+
+    <div class="img-container">
+      <img src="register_page.jpg" alt="Register Page Screenshot" style="margin-bottom: 25px;">
+    </div>
+
+    <div class="img-container">
+      <img src="login_page.jpg" alt="Login Page Screenshot">
+    </div>
+
+    <div class="section-title" style="margin-top: 30px;">Result:</div>
+    <div class="result-text" style="margin-left: 30px;">
+      Thus we learned how to debug AngularJS application using Chrome DevTools successfully.
+    </div>
+  </div>
+
+</body>
+</html>

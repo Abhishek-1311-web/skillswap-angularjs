@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin sign in — SkillSwap</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body ng-app="skillSwapApp" style="background:var(--pine-dark);">
+  <div class="center-screen">
+    <div style="width:100%;max-width:380px;">
+      <button class="back-link" style="color:#C7CFC5;" onclick="window.location.href='index.html'">← Back</button>
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+          <span style="font-size:22px;">🛡️</span>
+          <h3 style="font-size:18px;">Admin sign in</h3>
+        </div>
+        <form id="adminForm">
+          <label class="field"><span class="label">Admin password</span><input class="input" type="password" id="password" placeholder="admin123"></label>
+          <div id="errBox"></div>
+          <button type="submit" class="btn btn-gold btn-block">Enter dashboard</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.8.3/angular.min.js"></script>
+  <script src="js/angular-app.js"></script>
+  <script src="js/factories.js"></script>
+  <script src="js/services.js"></script>
+  <script src="js/business-rules.js"></script>
+  <script>
+    document.getElementById("adminForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const password = document.getElementById("password").value;
+      if (password !== "admin123") {
+        document.getElementById("errBox").innerHTML = `<div class="banner-error">Incorrect password. Try admin123 for this demo.</div>`;
+        return;
+      }
+      setSession({ role: "admin" });
+      window.location.href = "admin-dashboard.html";
+    });
+  </script>
+</body>
+</html>

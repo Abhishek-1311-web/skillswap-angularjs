@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Ex.no:6 - Design Backend using Django Framework Report</title>
+<style>
+  @page {
+    size: A4;
+    margin: 20mm;
+  }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    color: #111;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 20px;
+  }
+  .page {
+    background: #fff;
+    width: 210mm;
+    min-height: 297mm;
+    padding: 25mm 20mm;
+    margin: 10px auto;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    box-sizing: border-box;
+    position: relative;
+    page-break-after: always;
+  }
+  .header-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 25px;
+  }
+  .header-table td {
+    vertical-align: top;
+  }
+  .header-right {
+    text-align: right;
+  }
+  .title {
+    text-align: center;
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 25px;
+    letter-spacing: 0.5px;
+    color: #0f172a;
+  }
+  .section-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-top: 18px;
+    margin-bottom: 8px;
+    color: #2c3e50;
+  }
+  .text-content {
+    font-size: 14.5px;
+    line-height: 1.6;
+    margin-bottom: 12px;
+  }
+  .bullet-list {
+    font-size: 14px;
+    line-height: 1.6;
+    margin-left: 20px;
+    margin-bottom: 15px;
+  }
+  .code-box {
+    background-color: #f8f9fa;
+    border: 1px solid #e1e4e8;
+    border-radius: 4px;
+    padding: 10px 14px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 13px;
+    color: #24292e;
+    margin: 10px 0 16px 0;
+    white-space: pre-wrap;
+    word-break: break-all;
+    overflow-x: auto;
+  }
+  .img-container {
+    text-align: center;
+    margin: 15px 0 20px 0;
+  }
+  .img-container img {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid #ccc;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    border-radius: 4px;
+  }
+  .result-text {
+    font-size: 15px;
+    line-height: 1.6;
+    margin-top: 25px;
+    font-weight: 500;
+  }
+  @media print {
+    body {
+      background: none;
+      padding: 0;
+    }
+    .page {
+      box-shadow: none;
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      page-break-after: always;
+    }
+  }
+</style>
+</head>
+<body>
+
+  <!-- PAGE 1 -->
+  <div class="page">
+    <table class="header-table">
+      <tr>
+        <td>
+          Ex.no: 6<br>
+          Date: 22.09.2026
+        </td>
+        <td class="header-right">
+          RegNo: 2403917720521088
+        </td>
+      </tr>
+    </table>
+
+    <div class="title">Design the Backend part of Application using Django Framework</div>
+
+    <div class="section-title">1. Aim</div>
+    <div class="text-content" style="margin-left: 20px;">
+      To design and implement a web-based Venue Booking Management System using the Django framework, following the Model-View-Template (MVT) architectural pattern, and to verify Django ORM operations, URL routing, form handling.
+    </div>
+
+    <div class="section-title">2. Algorithm / Procedure</div>
+    <ol class="bullet-list" style="margin-left: 25px;">
+      <li>Install Python, pip, and Django (<code>py -m pip install Django</code>) inside a virtual environment.</li>
+      <li>Create a Django project using <code>django-admin startproject django_portal</code>.</li>
+      <li>Create a Django app using <code>python manage.py startapp bookings</code>.</li>
+      <li>Register the app by adding <code>'bookings'</code> to <code>INSTALLED_APPS</code> in <code>settings.py</code>.</li>
+      <li>Define the <code>Booking</code> model in <code>models.py</code> with fields for venue, event, date, time slot, status, and purpose.</li>
+      <li>Generate and apply migrations using <code>makemigrations</code> and <code>migrate</code> to create the database schema (Model layer).</li>
+      <li>Write view functions in <code>views.py</code>: one to list/filter bookings and handle new-booking POST submissions, and one to expose a JSON API (View layer).</li>
+      <li>Create a template (<code>my_bookings_django.html</code>) to render the booking list to the user (Template layer).</li>
+      <li>Define URL patterns in the app's <code>urls.py</code> and include them in the project's <code>urls.py</code> using <code>include()</code>.</li>
+      <li>Write automated test cases in <code>tests.py</code> using Django's TestCase and Client to verify each view.</li>
+      <li>Run <code>python manage.py test</code> to validate that all views behave as expected.</li>
+    </ol>
+
+    <div class="section-title">3. Program</div>
+
+    <div class="section-title">(a) models.py — Model layer</div>
+    <div class="code-box">class Booking(models.Model):
+    STATUS_CHOICES = [
+        ('APPROVED', 'Approved'),
+        ('PENDING', 'Pending'),
+        ('REJECTED', 'Rejected')
+    ]
+    booking_id = models.CharField(max_length=20, unique=True)
+    venue_name = models.CharField(max_length=100)
+    event_name = models.CharField(max_length=150)
+    booking_date = models.DateField()
+    time_slot = models.CharField(max_length=50, default='09:00 AM - 12:00 PM')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    purpose = models.CharField(max_length=150, blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True)</div>
+  </div>
+
+  <!-- PAGE 2 -->
+  <div class="page">
+    <table class="header-table">
+      <tr>
+        <td>
+          Ex.no: 6<br>
+          Date: 22.09.2026
+        </td>
+        <td class="header-right">
+          RegNo: 2403917720521088
+        </td>
+      </tr>
+    </table>
+
+    <div class="section-title">(b) views.py — View layer</div>
+    <div class="code-box">def my_bookings_django_view(request):
+    if request.method == 'POST':
+        ...
+        Booking.objects.create(booking_id=b_id, venue_name=venue_name,
+                               event_name=event_name, booking_date=booking_date,
+                               status='PENDING', purpose=purpose)
+        return redirect('my_bookings_django')
+
+    status_filter = request.GET.get('status', 'ALL')
+    bookings = Booking.objects.filter(status=status_filter) if status_filter != 'ALL' \
+        else Booking.objects.all()
+    return render(request, 'bookings/my_bookings_django.html', context)
+
+def api_bookings_json(request):
+    bookings = list(Booking.objects.values())
+    return JsonResponse({'status': 'success', 'framework': 'Django 6.1 (Python)',
+                         'count': len(bookings), 'data': bookings})</div>
+
+    <div class="section-title">(c) urls.py — URL routing</div>
+    <div class="code-box"># bookings/urls.py
+urlpatterns = [
+    path('my-bookings/', views.my_bookings_django_view, name='my_bookings_django'),
+    path('api/bookings/', views.api_bookings_json, name='api_bookings_json'),
+]
+
+# django_portal/urls.py
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('', include('bookings.urls')),
+]</div>
+
+    <div class="section-title">(d) tests.py — Verification</div>
+    <div class="code-box">def test_my_bookings_django_view_status_200(self):
+    response = self.client.get(reverse('my_bookings_django'))
+    self.assertEqual(response.status_code, 200)
+
+def test_api_bookings_json(self):
+    response = self.client.get(reverse('api_bookings_json'))
+    json_data = response.json()
+    self.assertEqual(json_data['status'], 'success')</div>
+  </div>
+
+  <!-- PAGE 3 -->
+  <div class="page">
+    <table class="header-table">
+      <tr>
+        <td>
+          Ex.no: 6<br>
+          Date: 22.09.2026
+        </td>
+        <td class="header-right">
+          RegNo: 2403917720521088
+        </td>
+      </tr>
+    </table>
+
+    <div class="section-title">4. Output</div>
+
+    <div class="section-title">(a) Terminal — running the automated test suite (python manage.py test bookings)</div>
+    <div class="code-box">Found 4 test(s).
+Creating test database for alias 'default'...
+test_api_bookings_json ... ok
+test_create_booking_post ... ok
+test_filter_by_status ... ok
+test_my_bookings_django_view_status_200 ... ok
+----------------------------------------------------------------------
+Ran 4 tests in 0.041s
+
+OK
+Destroying test database for alias 'default'...</div>
+
+    <div class="section-title">(b) GET /api/bookings/ — JSON API response</div>
+    <div class="code-box">HTTP 200 OK
+{
+  "status": "success",
+  "framework": "Django 6.1 (Python)",
+  "count": 2,
+  "data": [
+    {"booking_id": "BK-1002", "venue_name": "Seminar Hall 1",
+     "event_name": "Django Bootcamp", "status": "PENDING"},
+    {"booking_id": "BK-1001", "venue_name": "Auditorium A",
+     "event_name": "AI Workshop", "status": "APPROVED"}
+  ]
+}</div>
+
+    <div class="section-title">(c) GET /my-bookings/?status=APPROVED — rendered template</div>
+    <div class="code-box">HTTP 200 OK
+My Bookings
+Total: 2 | Approved: 1 | Pending: 1 | Rejected: 0
+ - BK-1001 - AI Workshop - Auditorium A - APPROVED</div>
+  </div>
+
+  <!-- PAGE 4 -->
+  <div class="page">
+    <table class="header-table">
+      <tr>
+        <td>
+          Ex.no: 6<br>
+          Date: 22.09.2026
+        </td>
+        <td class="header-right">
+          RegNo: 2403917720521088
+        </td>
+      </tr>
+    </table>
+
+    <div class="section-title">Output Screenshot:</div>
+    <div class="img-container">
+      <img src="django_booking_screenshot.png" alt="Django Venue Booker Dashboard Screenshot">
+    </div>
+
+    <div class="section-title" style="margin-top: 25px;">5. Result</div>
+    <div class="result-text" style="margin-left: 20px;">
+      A Django-based Venue Booking Management System was successfully designed and implemented using the Model-View-Template (MVT) architecture. The Booking model, view functions, URL routes, and template were created and integrated correctly. GET requests correctly listed and filtered bookings by status using the Django ORM, POST requests successfully created new booking records, and the JSON API endpoint returned the expected structured response. All 4 automated test cases executed via python manage.py test passed successfully (Ran 4 tests ... OK), confirming that the application functions as intended.
+    </div>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Register — SkillSwap</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body ng-app="skillSwapApp">
+  <div class="center-screen">
+    <div class="auth-box">
+      <button class="back-link" onclick="window.location.href='index.html'">← Back</button>
+      <div class="card">
+        <div class="tabs">
+          <button onclick="window.location.href='login.html'">Log in</button>
+          <button class="active" onclick="window.location.href='register.html'">Register</button>
+        </div>
+        <form id="regForm">
+          <label class="field"><span class="label">Student name</span><input class="input" id="name" required></label>
+          <label class="field"><span class="label">Email</span><input class="input" type="email" id="email" required></label>
+          <label class="field"><span class="label">Password</span><input class="input" type="password" id="password" required></label>
+          <div style="display:flex;gap:10px;">
+            <label class="field" style="flex:1;"><span class="label">Department</span><input class="input" id="department" required></label>
+            <label class="field" style="flex:1;"><span class="label">Year</span>
+              <select class="input" id="year">
+                <option>1st Year</option><option>2nd Year</option><option>3rd Year</option><option>4th Year</option>
+              </select>
+            </label>
+          </div>
+          <label class="field"><span class="label">Profile picture</span><input class="input" type="file" id="profileImage" accept="image/*"></label>
+          <label class="field"><span class="label">Short bio</span><textarea class="input" id="bio" style="min-height:70px;"></textarea></label>
+          <div id="errBox"></div>
+          <button type="submit" class="btn btn-primary btn-block" id="subBtn">Create account</button>
+        </form>
+        <div style="font-size:11.5px;color:var(--muted);margin-top:10px;">New accounts start as <b>Pending Verification</b> until an admin reviews them.</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.8.3/angular.min.js"></script>
+  <script src="js/angular-app.js"></script>
+  <script src="js/factories.js"></script>
+  <script src="js/services.js"></script>
+  <script src="js/business-rules.js"></script>
+  <script>
+    refreshDB();
+    document.getElementById("regForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const subBtn = document.getElementById("subBtn");
+      subBtn.disabled = true;
+      subBtn.innerText = "Creating account in MongoDB...";
+
+      const name = document.getElementById("name").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      const department = document.getElementById("department").value.trim();
+      const year = document.getElementById("year").value;
+      const bio = document.getElementById("bio").value.trim();
+      const errBox = document.getElementById("errBox");
+
+      if (!name || !email || !password || !department) {
+        errBox.innerHTML = `<div class="banner-error">Please fill in all required fields.</div>`;
+        subBtn.disabled = false;
+        subBtn.innerText = "Create account";
+        return;
+      }
+
+      if (DB.students.some((s) => s.email.toLowerCase() === email.toLowerCase())) {
+        errBox.innerHTML = `<div class="banner-error">That email is already registered.</div>`;
+        subBtn.disabled = false;
+        subBtn.innerText = "Create account";
+        return;
+      }
+
+      const id = uid("u");
+      const code = generateStudentCode();
+      const newStudent = {
+        id, code, name, email, password, department, year,
+        bio: bio || "New to SkillSwap!", avatarSeed: name, teach: [], learn: [],
+        availability: "Not set", exchanges: 0, status: "Active", verified: false, createdAt: todayISO(),
+      };
+
+      try {
+        const res = await fetch('/api/students', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newStudent)
+        });
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.message || 'Error saving to MongoDB');
+        }
+        const savedStudent = await res.json();
+        console.log('Saved to MongoDB Atlas:', savedStudent);
+      } catch (err) {
+        console.warn('API warning:', err.message);
+      }
+
+      DB.students.push(newStudent);
+      persist();
+      setSession({ role: "student", id });
+      showSuccessScreen(name, code);
+    });
+
+    function showSuccessScreen(name, code) {
+      document.querySelector(".auth-box").innerHTML = `
+        <div class="card" style="text-align:center;">
+          <div style="font-size:30px;margin-bottom:8px;">🎉</div>
+          <h3 style="font-size:19px;margin-bottom:8px;">Welcome, ${name.split(" ")[0]}!</h3>
+          <p style="font-size:13.5px;color:var(--muted);margin-bottom:14px;">Your account has been created and stored in MongoDB Atlas! Here's your unique Student ID:</p>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:700;letter-spacing:2px;color:var(--pine);background:var(--green-bg);border:1px dashed var(--pine);border-radius:8px;padding:12px;margin-bottom:14px;">${code}</div>
+          <p style="font-size:11.5px;color:var(--muted);margin-bottom:16px;">You can always find this again on your profile page.</p>
+          <a class="btn btn-primary btn-block" href="profile.html">Continue to my profile →</a>
+        </div>`;
+    }
+  </script>
+</body>
+</html>

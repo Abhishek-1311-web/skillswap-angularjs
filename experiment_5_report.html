@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Ex.no:5 - MongoDB Backend Integration Report</title>
+<style>
+  @page {
+    size: A4;
+    margin: 20mm;
+  }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    color: #111;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 20px;
+  }
+  .page {
+    background: #fff;
+    width: 210mm;
+    min-height: 297mm;
+    padding: 25mm 20mm;
+    margin: 10px auto;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    box-sizing: border-box;
+    position: relative;
+    page-break-after: always;
+  }
+  .header-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 25px;
+  }
+  .header-table td {
+    vertical-align: top;
+  }
+  .header-right {
+    text-align: right;
+  }
+  .title {
+    text-align: center;
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 25px;
+    letter-spacing: 0.5px;
+  }
+  .section-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-top: 18px;
+    margin-bottom: 8px;
+    color: #2c3e50;
+  }
+  .text-content {
+    font-size: 14.5px;
+    line-height: 1.6;
+    margin-bottom: 12px;
+  }
+  .bullet-list {
+    font-size: 14px;
+    line-height: 1.6;
+    margin-left: 20px;
+    margin-bottom: 15px;
+  }
+  .code-box {
+    background-color: #f8f9fa;
+    border: 1px solid #e1e4e8;
+    border-radius: 4px;
+    padding: 10px 14px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 13px;
+    color: #24292e;
+    margin: 10px 0 16px 0;
+    white-space: pre-wrap;
+    word-break: break-all;
+    overflow-x: auto;
+  }
+  .img-container {
+    text-align: center;
+    margin: 15px 0 20px 0;
+  }
+  .img-container img {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid #ccc;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    border-radius: 4px;
+  }
+  .result-text {
+    font-size: 15px;
+    line-height: 1.6;
+    margin-top: 25px;
+    font-weight: 500;
+  }
+  @media print {
+    body {
+      background: none;
+      padding: 0;
+    }
+    .page {
+      box-shadow: none;
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      page-break-after: always;
+    }
+  }
+</style>
+</head>
+<body>
+
+  <!-- PAGE 1 -->
+  <div class="page">
+    <table class="header-table">
+      <tr>
+        <td>
+          Ex.no: 5<br>
+          Date: 29.08.2025
+        </td>
+        <td class="header-right">
+          RegNo: 24IT099
+        </td>
+      </tr>
+    </table>
+
+    <div class="title">Develop the Back-end part of the application using MongoDB</div>
+
+    <div class="section-title">Aim:</div>
+    <div class="text-content" style="margin-left: 20px;">
+      To implement MongoDB database in our SkillSwap application using Node.js and Express.
+    </div>
+
+    <div class="section-title">Procedure / Requirements:</div>
+    <ul class="bullet-list">
+      <li><strong>1. MongoDB Atlas Account:</strong> Sign up for a free-tier account (500 MB storage) at <a href="https://www.mongodb.com/cloud/atlas" target="_blank">https://www.mongodb.com/cloud/atlas</a>.</li>
+      <li><strong>2. MongoDB Cluster:</strong> Create a free cluster (M0 Sandbox), choose AWS/Azure/GCP cloud provider, and select a region close to location.</li>
+      <li><strong>3. Database User & Network Access:</strong> Create a database user with username & password, and whitelist current IP (or 0.0.0.0/0 for global dev access).</li>
+      <li><strong>4. Connection String:</strong> Copy connection URI from Atlas &rarr; Connect &rarr; Drivers &rarr; Connection String. Example:<br>
+      <code>mongodb+srv://username:password@cluster0.mongodb.net/skillswap?retryWrites=true&w=majority</code></li>
+      <li><strong>5. Programming Environment:</strong> Initialize Node project and install dependencies:
+      <div class="code-box">npm install express mongoose cors dotenv</div></li>
+    </ul>
+
+    <div class="section-title">6. Backend Server Setup (server.js):</div>
+    <div class="code-box">require('dotenv').config();
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+const mongoURI = process.env.MONGODB_URI;
+
+mongoose.connect(mongoURI)
+  .then(() => console.log('MongoDB connected successfully'))
+  .catch(err => console.error('MongoDB connection failed:', err.message));
+
+app.use('/api', require('./src/routes/api'));
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`SkillSwap Backend running on port ${PORT}`));</div>
+  </div>
+
+  <!-- PAGE 2 -->
+  <div class="page">
+    <table class="header-table">
+      <tr>
+        <td>
+          Ex.no: 5<br>
+          Date: 29.08.2025
+        </td>
+        <td class="header-right">
+          RegNo: 24IT099
+        </td>
+      </tr>
+    </table>
+
+    <div class="section-title">7. Data Model & CRUD Implementation:</div>
+    <div class="text-content" style="margin-left: 20px;">
+      Defined Mongoose schema for <code>Student</code> model (<code>src/models/studentModel.js</code>) and created routes (<code>src/routes/api.js</code>) for registration (Create) and data fetching (Read).
+    </div>
+
+    <div class="section-title">CREATE (POST /api/students):</div>
+    <div class="code-box">router.post('/students', async (req, res) => {
+  try {
+    const student = new Student(req.body);
+    await student.save();
+    res.status(201).json(student);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});</div>
+
+    <div class="section-title">READ (GET /api/students):</div>
+    <div class="code-box">router.get('/students', async (req, res) => {
+  try {
+    const students = await Student.find().lean();
+    res.json(students);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});</div>
+
+    <div class="section-title">Result:</div>
+    <div class="result-text" style="margin-left: 20px;">
+      The experiment of implementing MongoDB in our SkillSwap application using Node.js was successfully carried out. A connection was established between the Node.js server and the MongoDB database using Mongoose. The application was able to perform essential database operations such as insertion (Create) and retrieval (Read) of student records. This validated the integration of MongoDB as a backend database with Node.js for building scalable web applications.
+    </div>
+  </div>
+
+</body>
+</html>
