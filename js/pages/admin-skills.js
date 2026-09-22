@@ -1,10 +1,8 @@
-(function () {
+app.controller("AdminSkillsController", function ($scope, $http) {
   if (!requireAdmin()) return;
   renderShell("admin", null);
 
-  render();
-
-  function render() {
+  $scope.render = function () {
     pageContent().innerHTML = `
       ${pageHead("Admin", "Skill Categories")}
       <div class="grid-2" style="align-items:start;">
@@ -23,66 +21,101 @@
             <div style="font-size:13px;font-weight:700;margin-bottom:12px;">Add a skill</div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
               <input class="input" id="skillName" placeholder="New skill name" style="flex:1;min-width:140px;">
-              <select class="input" id="skillCat" style="width:160px;">${DB.categories.map((c) => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("")}</select>
+              <select class="input" id="skillCat" style="width:170px;"></select>
               <button class="btn btn-primary" id="addSkillBtn">+ Add</button>
             </div>
           </div>
-          <div class="card" style="max-height:420px;overflow-y:auto;">
-            <div style="font-size:13px;font-weight:700;margin-bottom:10px;">All skills</div>
-            <div id="skillList"></div>
-          </div>
+          <div id="skillList"></div>
         </div>
       </div>
     `;
 
-    document.getElementById("addCatBtn").addEventListener("click", () => {
-      const val = document.getElementById("catName").value.trim();
-      if (!val) return;
-      adminCategoryAdd(val);
-      render();
-    });
-    document.getElementById("addSkillBtn").addEventListener("click", () => {
-      const name = document.getElementById("skillName").value.trim();
-      const catId = document.getElementById("skillCat").value;
+    document.getElementById("skillCat").innerHTML = DB.categories.map(function (c) {
+      return `<option value="${c.id}">${escapeHtml(c.name)}</option>`;
+    }).join("");
+
+    renderCategories();
+    renderSkills();
+
+    document.getElementById("addCatBtn").addEventListener("click", function () {
+      var name = document.getElementById("catName").value.trim();
       if (!name) return;
-      adminSkillAdd(name, catId);
-      render();
+      adminCategoryAdd(name);
+      $http.post("/api/categories", { name: name }).catch(function () {});
+      $scope.render();
     });
 
-    renderCatList();
-    renderSkillList();
-  }
+    document.getElementById("addSkillBtn").addEventListener("click", function () {
+      var name = document.getElementById("skillName").value.trim();
+      var catId = document.getElementById("skillCat").value;
+      if (!name || !catId) return;
+      adminSkillAdd(name, catId);
+      $http.post("/api/skills", { name: name, categoryId: catId }).catch(function () {});
+      $scope.render();
+    });
+  };
 
-  function renderCatList() {
-    document.getElementById("catList").innerHTML = `<div class="grid-2">${DB.categories.map((c) => `
-      <div class="card" data-cat-row="${c.id}">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-          <span class="cat-label" style="font-size:13.5px;font-weight:600;">${escapeHtml(c.name)}</span>
-          <div style="display:flex;gap:4px;">
-            <button class="edit-cat-btn" data-id="${c.id}" style="background:none;border:none;cursor:pointer;color:var(--pine);">✎</button>
-            <button class="del-cat-btn" data-id="${c.id}" style="background:none;border:none;cursor:pointer;color:var(--red);">🗑</button>
+  function renderCategories() {
+    document.getElementById("catList").innerHTML = DB.categories.map(function (c) {
+      var count = DB.skills.filter(function (s) { return s.categoryId === c.id; }).length;
+      return `
+        <div class="card" style="margin-bottom:10px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-weight:600;font-size:14px;">${escapeHtml(c.name)}</div>
+            <div style="font-size:11.5px;color:var(--muted);">${count} skill${count !== 1 ? "s" : ""}</div>
           </div>
-        </div>
-      </div>`).join("")}</div>`;
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-ghost btn-sm edit-cat-btn" data-id="${c.id}" data-name="${escapeHtml(c.name)}">Edit</button>
+            <button class="btn btn-danger btn-sm del-cat-btn" data-id="${c.id}">Delete</button>
+          </div>
+        </div>`;
+    }).join("");
 
-    document.querySelectorAll(".edit-cat-btn").forEach((b) => b.addEventListener("click", () => {
-      const row = document.querySelector(`[data-cat-row="${b.dataset.id}"]`);
-      const cat = categoryById(b.dataset.id);
-      row.innerHTML = `<div style="display:flex;gap:6px;"><input class="input" id="editInput-${cat.id}" value="${escapeHtml(cat.name)}"><button class="btn btn-primary btn-sm" id="saveInput-${cat.id}">Save</button></div>`;
-      document.getElementById(`saveInput-${cat.id}`).addEventListener("click", () => {
-        adminCategoryEdit(cat.id, document.getElementById(`editInput-${cat.id}`).value.trim());
-        render();
+    document.querySelectorAll(".edit-cat-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.dataset.id, name = btn.dataset.name;
+        var newName = prompt("Rename category:", name);
+        if (newName && newName.trim()) {
+          adminCategoryEdit(id, newName.trim());
+          $scope.render();
+        }
       });
-    }));
-    document.querySelectorAll(".del-cat-btn").forEach((b) => b.addEventListener("click", () => { adminCategoryDelete(b.dataset.id); render(); }));
+    });
+
+    document.querySelectorAll(".del-cat-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.dataset.id;
+        if (confirm("Delete this category? Skills inside it won't be deleted.")) {
+          adminCategoryDelete(id);
+          $http.delete("/api/categories/" + id).catch(function () {});
+          $scope.render();
+        }
+      });
+    });
   }
 
-  function renderSkillList() {
-    document.getElementById("skillList").innerHTML = DB.skills.length ? DB.skills.map((s) => `
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line);">
-        <span style="font-size:13px;">${escapeHtml(s.name)} <span style="color:var(--muted);font-size:11px;">— ${escapeHtml(categoryName(s.categoryId))}</span></span>
-        <button class="del-skill-btn" data-id="${s.id}" style="background:none;border:none;cursor:pointer;color:var(--red);">🗑</button>
-      </div>`).join("") : `<div class="empty-state">No skills yet.</div>`;
-    document.querySelectorAll(".del-skill-btn").forEach((b) => b.addEventListener("click", () => { adminSkillDelete(b.dataset.id); render(); }));
+  function renderSkills() {
+    document.getElementById("skillList").innerHTML = DB.skills.map(function (s) {
+      var cat = categoryById(s.categoryId);
+      return `
+        <div class="card" style="margin-bottom:8px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <span style="font-weight:600;font-size:13.5px;">${escapeHtml(s.name)}</span>
+            <span class="pill pill-muted" style="margin-left:8px;font-size:11px;">${escapeHtml(cat ? cat.name : "Uncategorized")}</span>
+          </div>
+          <button class="btn btn-danger btn-sm del-skill-btn" data-id="${s.id}">Delete</button>
+        </div>`;
+    }).join("");
+
+    document.querySelectorAll(".del-skill-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.dataset.id;
+        adminSkillDelete(id);
+        $http.delete("/api/skills/" + id).catch(function () {});
+        $scope.render();
+      });
+    });
   }
-})();
+
+  $scope.render();
+});
