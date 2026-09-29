@@ -1,30 +1,8 @@
 /* ============================================================
    SkillSwap — Business Logic Layer (AngularJS)
-   ------------------------------------------------------------
-   Product rules live here instead of being scattered/hard-coded
-   inside page scripts, so every page enforces them the same way.
-
-   Registered as an AngularJS app.service() provider on the
-   "skillSwapApp" module (declared in js/angular-app.js).
-   js/angular-bootstrap.js pulls the instance out of the injector
-   and exposes it as window.BusinessRules, so request-exchange.js,
-   sessions.js, dashboard.js, profile.js and feedback.js keep
-   calling it exactly as before — same method names, same rules.
-
-   Depends on: DB, studentById(), updateStudent(), todayISO() from
-   js/data.js — load this file AFTER js/data.js, js/angular-app.js
-   and js/services.js (NotificationService is injected via
-   AngularJS DI instead of being referenced as a bare global).
    ============================================================ */
 
 app.service("BusinessRules", function (NotificationService) {
-  /* ---- Rule 1: Exchange request eligibility ----
-     - Blocked/Suspended students can't send or receive requests.
-     - A student can't request themselves, or a student with no
-       skills to teach.
-     - To stop spam, outgoing PENDING requests are capped:
-       unverified students get a lower cap than verified ones,
-       which also gives students a real incentive to verify. */
   this.MAX_PENDING_UNVERIFIED = 3;
   this.MAX_PENDING_VERIFIED = 8;
 
@@ -46,9 +24,6 @@ app.service("BusinessRules", function (NotificationService) {
     return { allowed: true, reason: "" };
   };
 
-  /* ---- Rule 2: Trust badge ----
-     Rewards verified students who complete exchanges. Shown
-     anywhere a student's standing is displayed. */
   this.getTrustBadge = function (student) {
     if (!student.verified) return { label: "New Member", tone: "muted" };
     if (student.exchanges >= 5) return { label: "🏆 Skill Champion", tone: "pine" };
@@ -56,17 +31,20 @@ app.service("BusinessRules", function (NotificationService) {
     return { label: "Active Member", tone: "gold" };
   };
 
-  /* ---- Rule 3: Session scheduling window ----
-     A session can't be booked in the past, and (to keep the
-     schedule realistic for a college term) not more than 90
-     days out either. */
   this.MAX_SCHEDULE_DAYS_AHEAD = 90;
 
   this.validateSessionDate = function (dateStr) {
-    if (!dateStr) return { valid: false, reason: "Pick a date." };
-    var picked = new Date(dateStr + "T00:00:00");
-    if (isNaN(picked.getTime())) return { valid: false, reason: "That date isn't valid." };
-    var today = new Date(todayISO() + "T00:00:00");
+    if (!dateStr) return { valid: false, reason: "Please pick a date." };
+    var parts = dateStr.split('-');
+    if (parts.length !== 3) return { valid: false, reason: "Invalid date format." };
+    var pickedYear = parseInt(parts[0], 10);
+    var pickedMonth = parseInt(parts[1], 10) - 1;
+    var pickedDay = parseInt(parts[2], 10);
+
+    var picked = new Date(pickedYear, pickedMonth, pickedDay);
+    var now = new Date();
+    var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
     if (picked < today) return { valid: false, reason: "You can't schedule a session in the past." };
     var maxDate = new Date(today);
     maxDate.setDate(maxDate.getDate() + this.MAX_SCHEDULE_DAYS_AHEAD);
@@ -74,11 +52,6 @@ app.service("BusinessRules", function (NotificationService) {
     return { valid: true, reason: "" };
   };
 
-  /* ---- Rule 4: Report auto-moderation ----
-     If 3 or more open reports (Pending/Under Review) pile up
-     against the same student, the account is auto-suspended
-     pending admin review — admins don't have to catch every
-     repeat offender manually. */
   this.REPORT_AUTO_SUSPEND_THRESHOLD = 3;
 
   this.evaluateReportEscalation = function (reportedUserId) {

@@ -1,3 +1,4 @@
+
 /* ============================================================
    SkillSwap — data layer (MongoDB API + localStorage fallback)
    ============================================================ */
@@ -74,6 +75,19 @@ let DB = loadDB();
 function refreshDB() { DB = loadDB(); return DB; }
 function persist() { saveDB(DB); }
 
+function mergeById(localArr, remoteArr) {
+  if (!remoteArr || !Array.isArray(remoteArr)) return localArr || [];
+  if (!localArr || !Array.isArray(localArr)) return remoteArr;
+  const map = new Map();
+  remoteArr.forEach((item) => { if (item && item.id) map.set(item.id, item); });
+  localArr.forEach((item) => {
+    if (item && item.id && !map.has(item.id)) {
+      map.set(item.id, item);
+    }
+  });
+  return Array.from(map.values());
+}
+
 // Sync with MongoDB Atlas Backend
 async function syncDBWithBackend() {
   try {
@@ -81,14 +95,14 @@ async function syncDBWithBackend() {
     if (res.ok) {
       const data = await res.json();
       if (data.students && data.students.length > 0) {
-        DB.categories = (data.categories && data.categories.length) ? data.categories : DB.categories;
-        DB.skills = (data.skills && data.skills.length) ? data.skills : DB.skills;
-        DB.students = data.students;
-        DB.requests = (data.requests && data.requests.length) ? data.requests : DB.requests;
-        DB.connections = (data.connections && data.connections.length) ? data.connections : DB.connections;
-        DB.sessions = (data.sessions && data.sessions.length) ? data.sessions : DB.sessions;
-        DB.reports = (data.reports && data.reports.length) ? data.reports : DB.reports;
-        DB.notifications = (data.notifications && data.notifications.length) ? data.notifications : DB.notifications;
+        DB.categories = mergeById(DB.categories, data.categories);
+        DB.skills = mergeById(DB.skills, data.skills);
+        DB.students = mergeById(DB.students, data.students);
+        DB.requests = mergeById(DB.requests, data.requests);
+        DB.connections = mergeById(DB.connections, data.connections);
+        DB.sessions = mergeById(DB.sessions, data.sessions);
+        DB.reports = mergeById(DB.reports, data.reports);
+        DB.notifications = mergeById(DB.notifications, data.notifications);
         persist();
       }
     }
@@ -160,8 +174,14 @@ function updateStudent(id, patch) {
   }).catch(() => {});
 }
 function addNotification(userId, text) {
-  DB.notifications.unshift(NotificationFactory.create(userId, text));
+  const notif = NotificationFactory.create(userId, text);
+  DB.notifications.unshift(notif);
   persist();
+  fetch('/api/notifications', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(notif)
+  }).catch(() => {});
 }
 function sendRequest(me, target, teachSkill, learnSkill, message) {
   const req = RequestFactory.create(me.id, target.id, teachSkill, learnSkill, message);
@@ -188,11 +208,17 @@ function respondRequest(reqId, status, actingStudentName) {
   }).catch(() => {});
   if (status === "Accepted") {
     const connId = uid("cn");
-    DB.connections.push({ id: connId, student1Id: req.senderId, student2Id: req.receiverId, status: "Accepted" });
+    const newConn = { id: connId, student1Id: req.senderId, student2Id: req.receiverId, status: "Accepted" };
+    DB.connections.push(newConn);
     const s1 = studentById(req.senderId), s2 = studentById(req.receiverId);
     updateStudent(req.senderId, { exchanges: (s1 ? s1.exchanges : 0) + 1 });
     updateStudent(req.receiverId, { exchanges: (s2 ? s2.exchanges : 0) + 1 });
     persist();
+    fetch('/api/connections', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newConn)
+    }).catch(() => {});
   }
 }
 function scheduleSession(connection, me, form) {
@@ -208,10 +234,25 @@ function scheduleSession(connection, me, form) {
   }).catch(() => {});
   return sess;
 }
+function updateSessionStatus(sessionId, status) {
+  DB.sessions = DB.sessions.map((s) => (s.id === sessionId ? { ...s, status } : s));
+  persist();
+  fetch('/api/sessions/' + sessionId, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status })
+  }).catch(() => {});
+}
 function markNotifRead(id) {
   DB.notifications = DB.notifications.map((n) => (n.id === id ? { ...n, read: true } : n));
   persist();
+  fetch('/api/notifications/' + id, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ read: true })
+  }).catch(() => {});
 }
+
 function submitReport(me, form) {
   const rep = { id: uid("rep"), reporterId: me.id, reportedUserId: form.userId, reason: form.reason, description: form.description, status: "Pending", adminAction: "", createdAt: todayISO() };
   DB.reports.unshift(rep);

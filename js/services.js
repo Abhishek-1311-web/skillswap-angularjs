@@ -101,6 +101,28 @@ app.service("SessionSchedulingService", function (SessionFactory, NotificationSe
     persist();
     var otherId = connection.student1Id === me.id ? connection.student2Id : connection.student1Id;
     NotificationService.send(otherId, me.name + " scheduled a session with you.");
+
+    fetch('/api/sessions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(sess)
+    }).catch(function (err) {
+      console.warn('Express.js session API save error:', err.message);
+    });
+
     return sess;
   };
+  this.updateStatus = function (sessionId, status) {
+    DB.sessions = DB.sessions.map(function (s) { return s.id === sessionId ? Object.assign({}, s, { status: status }) : s; });
+    persist();
+
+    fetch('/api/sessions/' + sessionId, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: status })
+    }).catch(function (err) {
+      console.warn('Express.js session API update error:', err.message);
+    });
+  };
 });
+

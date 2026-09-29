@@ -271,6 +271,52 @@ router.delete('/sessions/:id', async (req, res) => {
   }
 });
 
+// ==================== CONNECTIONS CRUD ====================
+router.get('/connections', async (req, res) => {
+  try {
+    const connections = await Connection.find().lean();
+    res.json(connections);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.post('/connections', async (req, res) => {
+  try {
+    const connData = req.body;
+    if (!connData.id) connData.id = 'cn_' + Date.now();
+    const connection = new Connection(connData);
+    await connection.save();
+    res.status(201).json(connection);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+router.put('/connections/:id', async (req, res) => {
+  try {
+    const connection = await Connection.findOneAndUpdate(
+      buildIdQuery(req.params.id),
+      req.body,
+      { new: true }
+    );
+    if (!connection) return res.status(404).json({ message: 'Connection not found' });
+    res.json(connection);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+router.delete('/connections/:id', async (req, res) => {
+  try {
+    const result = await Connection.findOneAndDelete(buildIdQuery(req.params.id));
+    if (!result) return res.status(404).json({ message: 'Connection not found' });
+    res.json({ message: 'Connection deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // ==================== CATEGORIES CRUD ====================
 router.get('/categories', async (req, res) => {
   try {
@@ -294,6 +340,15 @@ router.post('/categories', async (req, res) => {
 });
 
 // ==================== NOTIFICATIONS ====================
+router.get('/notifications', async (req, res) => {
+  try {
+    const notifications = await Notification.find().lean();
+    res.json(notifications);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 router.get('/notifications/:userId', async (req, res) => {
   try {
     const notifications = await Notification.find({ userId: req.params.userId }).lean();
@@ -303,4 +358,41 @@ router.get('/notifications/:userId', async (req, res) => {
   }
 });
 
+router.post('/notifications', async (req, res) => {
+  try {
+    const notifData = req.body;
+    if (!notifData.id) notifData.id = 'n_' + Date.now();
+    const notification = new Notification(notifData);
+    await notification.save();
+    res.status(201).json(notification);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+router.put('/notifications/:id', async (req, res) => {
+  try {
+    const notification = await Notification.findOneAndUpdate(
+      buildIdQuery(req.params.id),
+      req.body,
+      { new: true }
+    );
+    if (!notification) return res.status(404).json({ message: 'Notification not found' });
+    res.json(notification);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+router.delete('/notifications/:id', async (req, res) => {
+  try {
+    const result = await Notification.findOneAndDelete(buildIdQuery(req.params.id));
+    if (!result) return res.status(404).json({ message: 'Notification not found' });
+    res.json({ message: 'Notification deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = router;
+
